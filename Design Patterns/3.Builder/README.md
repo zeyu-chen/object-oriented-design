@@ -13,49 +13,74 @@
 - 具体建造者（Concrete Builder）：实现构建步骤
 - 指挥者（Director）：控制构建过程
 
-## 核心代码
+## 典型使用场景
+
+- **复杂配置对象构建**
 
 ```typescript
-// 1. 产品
-class Meal {
-  private starter: Starter | null = null;
-  private main: Main | null = null;
-  private dessert: Dessert | null = null;
-  private drink: Drink | null = null;
-  // ... getters and setters
-}
+const serverConfig = new ServerConfigBuilder()
+  .setPort(8080)
+  .setHost('localhost')
+  .setDatabase({
+    host: 'db.example.com',
+    port: 5432,
+    name: 'mydb',
+  })
+  .setCache({
+    type: 'redis',
+    ttl: 3600,
+  })
+  .build();
+```
 
-// 2. 抽象建造者
-interface Builder {
-  addStarter(): void;
-  addMainCourse(): void;
-  addDessert(): void;
-  addDrink(): void;
-  build(): Meal;
-}
+- **UI 组件构建**
 
-// 3. 具体建造者
-class VeganMealBuilder implements Builder {
-  private meal: Meal = new Meal();
+```typescript
+const form = new FormBuilder()
+  .addTextField('username', { required: true })
+  .addPasswordField('password', { minLength: 8 })
+  .addEmailField('email', { validate: true })
+  .addSubmitButton('登录')
+  .build();
+```
 
-  addStarter(): void {
-    this.meal.starter = Starter.SALAD;
-  }
-  // ... other implementations
-  build(): Meal {
-    return this.meal;
-  }
-}
+- **API 请求构建**
 
-// 4. 指挥者
-class Director {
-  constructVeganMeal(builder: Builder): void {
-    builder.addStarter();
-    builder.addMainCourse();
-    builder.addDessert();
-    builder.addDrink();
-  }
-}
+```typescript
+const request = new RequestBuilder()
+  .setMethod('POST')
+  .setUrl('/api/users')
+  .setHeaders({
+    'Content-Type': 'application/json',
+  })
+  .setBody({ name: 'John' })
+  .setTimeout(5000)
+  .build();
+```
+
+- **文档生成**
+
+```typescript
+const document = new PDFBuilder()
+  .addHeader('发票')
+  .addCustomerInfo(customer)
+  .addItemList(items)
+  .addTotal(total)
+  .addFooter('感谢您的惠顾')
+  .build();
+```
+
+- **测试数据构建**
+
+```typescript
+const testUser = new TestUserBuilder()
+  .withBasicInfo({
+    name: 'Test User',
+    email: 'test@example.com',
+  })
+  .withPermissions(['read', 'write'])
+  .withPreferences({ theme: 'dark' })
+  .build();
 ```
 
 ## 实现方式
@@ -79,6 +104,14 @@ class Director {
 - 需要分步构建对象
 - 需要细粒度控制构建过程
 - 构建过程需要提供不同表示
+
+## 优点
+
+- 分离构建过程和表示
+- 更好的代码复用
+- 更细粒度的控制
+- 封装复杂对象的创建
+- 产品的不同表示方式
 
 ## 缺点
 
