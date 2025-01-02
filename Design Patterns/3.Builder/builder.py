@@ -2,31 +2,31 @@ from enum import Enum
 from abc import ABC, abstractmethod
 
 class Starter(Enum):
-    SALAD = 1
-    SOUP = 2
-    BRUSCHETTA = 3
-    VEGGIE_STICKS = 4
-    CHICKEN_WINGS = 5
+    SALAD = "SALAD"
+    SOUP = "SOUP"
+    BRUSCHETTA = "BRUSCHETTA"
+    VEGGIE_STICKS = "VEGGIE_STICKS"
+    CHICKEN_WINGS = "CHICKEN_WINGS"
 
 class Main(Enum):
-    GRILLED_CHICKEN = 1
-    PASTA = 2
-    VEGGIE_STIR_FRY = 3
-    FISH = 4
-    PIZZA = 5
+    GRILLED_CHICKEN = "GRILLED_CHICKEN"
+    PASTA = "PASTA"
+    VEGGIE_STIR_FRY = "VEGGIE_STIR_FRY"
+    FISH = "FISH"
+    PIZZA = "PIZZA"
 
 class Dessert(Enum):
-    FRUIT_SALAD = 1
-    ICE_CREAM = 2
-    CHOCOLATE_CAKE = 3
-    VEGAN_PUDDING = 4
-    CHEESECAKE = 5
+    FRUIT_SALAD = "FRUIT_SALAD"
+    ICE_CREAM = "ICE_CREAM"
+    CHOCOLATE_CAKE = "CHOCOLATE_CAKE"
+    VEGAN_PUDDING = "VEGAN_PUDDING"
+    CHEESECAKE = "CHEESECAKE"
 
 class Drink(Enum):
-    WATER = 1
-    VEGAN_SHAKE = 2
-    SODA = 3
-    FRUIT_JUICE = 4
+    WATER = "WATER"
+    VEGAN_SHAKE = "VEGAN_SHAKE"
+    SODA = "SODA"
+    FRUIT_JUICE = "FRUIT_JUICE"
 
 class Meal:
     def __init__(self):
@@ -84,23 +84,33 @@ class Builder(ABC):
     def add_drink(self):
         pass
 
+    @abstractmethod
+    def build(self):
+        pass
+
 class VeganMealBuilder(Builder):
     def __init__(self):
         self.meal = Meal()
 
     def add_starter(self):
         self.meal.starter = Starter.SALAD
+        return self
 
     def add_main_course(self):
         self.meal.main = Main.VEGGIE_STIR_FRY
+        return self
 
     def add_dessert(self):
         self.meal.dessert = Dessert.VEGAN_PUDDING
+        return self
 
     def add_drink(self):
         self.meal.drink = Drink.VEGAN_SHAKE
+        return self
 
     def build(self):
+        if not self.meal.starter or not self.meal.main:
+            raise ValueError("Meal is incomplete")
         return self.meal
 
 class HealthyMealBuilder(Builder):
@@ -109,52 +119,80 @@ class HealthyMealBuilder(Builder):
 
     def add_starter(self):
         self.meal.starter = Starter.SALAD
+        return self
 
     def add_main_course(self):
         self.meal.main = Main.GRILLED_CHICKEN
+        return self
 
     def add_dessert(self):
         self.meal.dessert = Dessert.FRUIT_SALAD
+        return self
 
     def add_drink(self):
         self.meal.drink = Drink.WATER
+        return self
 
     def build(self):
         return self.meal
 
 class Director:
-    def construct_vegan_meal(self, builder):
-        builder.add_starter()
-        builder.add_main_course()
-        builder.add_dessert()
-        builder.add_drink()
+    def construct_vegan_meal(self, builder: Builder) -> Meal:
+        return (builder
+                .add_starter()
+                .add_main_course()
+                .add_dessert()
+                .add_drink()
+                .build())
 
-    def construct_healthy_meal(self, builder):
-        builder.add_starter()
-        builder.add_main_course()
-        builder.add_dessert()
-        builder.add_drink()
+    def construct_healthy_meal(self, builder: Builder) -> Meal:
+        return (builder
+                .add_starter()
+                .add_main_course()
+                .add_dessert()
+                .add_drink()
+                .build())
 
-def testBuilder():
+    def construct_custom_meal(self, builder: Builder, *, with_starter=False, 
+                            with_dessert=False, with_drink=False) -> Meal:
+        meal = builder.add_main_course()
+        
+        if with_starter: meal = meal.add_starter()
+        if with_dessert: meal = meal.add_dessert()
+        if with_drink: meal = meal.add_drink()
+        
+        return meal.build()
+
+def test_builder():
     director = Director()
-    vegan_builder = VeganMealBuilder()
-    director.construct_vegan_meal(vegan_builder)
-
-    vegan_meal = vegan_builder.build()
-    print("Vegan Meal constructed: ")
-    print(f"Starter: {vegan_meal.starter.name}")
-    print(f"Main: {vegan_meal.main.name}")
-    print(f"Dessert: {vegan_meal.dessert.name}")
-    print(f"Drink: {vegan_meal.drink.name}")
-
-    healthy_builder = HealthyMealBuilder()
-    director.construct_healthy_meal(healthy_builder)
-    healthy_meal = healthy_builder.build()
-    print("Healthy Meal constructed: ")
-    print(f"Starter: {healthy_meal.starter.name}")
-    print(f"Main: {healthy_meal.main.name}")
-    print(f"Dessert: {healthy_meal.dessert.name}")
-    print(f"Drink: {healthy_meal.drink.name}")
+    
+    # 构建素食餐
+    vegan_meal = director.construct_vegan_meal(VeganMealBuilder())
+    print("\nVegan Meal constructed:")
+    print("Starter:", vegan_meal.starter.value)
+    print("Main:", vegan_meal.main.value)
+    print("Dessert:", vegan_meal.dessert.value)
+    print("Drink:", vegan_meal.drink.value)
+    
+    # 构建健康餐
+    healthy_meal = director.construct_healthy_meal(HealthyMealBuilder())
+    print("\nHealthy Meal constructed:")
+    print("Starter:", healthy_meal.starter.value)
+    print("Main:", healthy_meal.main.value)
+    print("Dessert:", healthy_meal.dessert.value)
+    print("Drink:", healthy_meal.drink.value)
+    
+    # 构建自定义餐
+    custom_meal = director.construct_custom_meal(
+        VeganMealBuilder(),
+        with_starter=True,
+        with_drink=True
+    )
+    print("\nCustom Meal constructed:")
+    print("Starter:", custom_meal.starter.value if custom_meal.starter else "None")
+    print("Main:", custom_meal.main.value)
+    print("Dessert:", custom_meal.dessert.value if custom_meal.dessert else "None")
+    print("Drink:", custom_meal.drink.value if custom_meal.drink else "None")
 
 if __name__ == "__main__":
-    testBuilder()
+    test_builder()

@@ -63,33 +63,40 @@ class Meal {
 }
 
 interface Builder {
-  addStarter(): void;
-  addMainCourse(): void;
-  addDessert(): void;
-  addDrink(): void;
+  addStarter(): this;
+  addMainCourse(): this;
+  addDessert(): this;
+  addDrink(): this;
   build(): Meal;
 }
 
 class VeganMealBuilder implements Builder {
   private meal: Meal = new Meal();
 
-  addStarter(): void {
+  addStarter(): this {
     this.meal.starter = Starter.SALAD;
+    return this;
   }
 
-  addMainCourse(): void {
+  addMainCourse(): this {
     this.meal.main = Main.VEGGIE_STIR_FRY;
+    return this;
   }
 
-  addDessert(): void {
+  addDessert(): this {
     this.meal.dessert = Dessert.VEGAN_PUDDING;
+    return this;
   }
 
-  addDrink(): void {
+  addDrink(): this {
     this.meal.drink = Drink.VEGAN_SHAKE;
+    return this;
   }
 
   build(): Meal {
+    if (!this.meal.starter || !this.meal.main) {
+      throw new Error('Meal is incomplete');
+    }
     return this.meal;
   }
 }
@@ -97,20 +104,24 @@ class VeganMealBuilder implements Builder {
 class HealthyMealBuilder implements Builder {
   private meal: Meal = new Meal();
 
-  addStarter(): void {
+  addStarter(): this {
     this.meal.starter = Starter.SALAD;
+    return this;
   }
 
-  addMainCourse(): void {
+  addMainCourse(): this {
     this.meal.main = Main.GRILLED_CHICKEN;
+    return this;
   }
 
-  addDessert(): void {
+  addDessert(): this {
     this.meal.dessert = Dessert.FRUIT_SALAD;
+    return this;
   }
 
-  addDrink(): void {
+  addDrink(): this {
     this.meal.drink = Drink.WATER;
+    return this;
   }
 
   build(): Meal {
@@ -119,45 +130,44 @@ class HealthyMealBuilder implements Builder {
 }
 
 class Director {
-  constructVeganMeal(builder: Builder): void {
-    builder.addStarter();
-    builder.addMainCourse();
-    builder.addDessert();
-    builder.addDrink();
+  constructVeganMeal(builder: Builder): Meal {
+    return builder.addStarter().addMainCourse().addDessert().addDrink().build();
   }
 
-  constructHealthyMeal(builder: Builder): void {
-    builder.addStarter();
-    builder.addMainCourse();
-    builder.addDessert();
-    builder.addDrink();
+  constructHealthyMeal(builder: Builder): Meal {
+    return builder.addStarter().addMainCourse().addDessert().addDrink().build();
+  }
+
+  constructCustomMeal(
+    builder: Builder,
+    options: {
+      withStarter?: boolean;
+      withDessert?: boolean;
+      withDrink?: boolean;
+    }
+  ): Meal {
+    let meal = builder.addMainCourse();
+
+    if (options.withStarter) meal = meal.addStarter();
+    if (options.withDessert) meal = meal.addDessert();
+    if (options.withDrink) meal = meal.addDrink();
+
+    return meal.build();
   }
 }
 
 function testBuilder(): void {
   const director = new Director();
 
-  // Build vegan meal
-  const veganBuilder = new VeganMealBuilder();
-  director.constructVeganMeal(veganBuilder);
-  const veganMeal = veganBuilder.build();
+  const veganMeal = director.constructVeganMeal(new VeganMealBuilder());
+  const healthyMeal = director.constructHealthyMeal(new HealthyMealBuilder());
 
-  console.log('Vegan Meal constructed:');
-  console.log(`Starter: ${veganMeal.starter}`);
-  console.log(`Main: ${veganMeal.main}`);
-  console.log(`Dessert: ${veganMeal.dessert}`);
-  console.log(`Drink: ${veganMeal.drink}`);
+  const customMeal = director.constructCustomMeal(new VeganMealBuilder(), {
+    withStarter: true,
+    withDrink: true,
+  });
 
-  // Build healthy meal
-  const healthyBuilder = new HealthyMealBuilder();
-  director.constructHealthyMeal(healthyBuilder);
-  const healthyMeal = healthyBuilder.build();
-
-  console.log('\nHealthy Meal constructed:');
-  console.log(`Starter: ${healthyMeal.starter}`);
-  console.log(`Main: ${healthyMeal.main}`);
-  console.log(`Dessert: ${healthyMeal.dessert}`);
-  console.log(`Drink: ${healthyMeal.drink}`);
+  console.log('Meals constructed:', { veganMeal, healthyMeal, customMeal });
 }
 
 testBuilder();
