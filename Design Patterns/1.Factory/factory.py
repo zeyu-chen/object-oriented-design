@@ -138,7 +138,7 @@ class DeluxeVeganBurger(Burger):
     def serve(self):
         print(f"Serving hot {self.name}!")
 
-def main():
+def testBurgerFactory():
     # Create factories
     burger_factory = BurgerFactory()
     
@@ -157,5 +157,5 @@ def main():
     deluxe_vegan = burger_factory.order_burger(Burgers.DELUXEVEGAN)
 
 if __name__ == "__main__":
-    main()
+    testBurgerFactory()
 
